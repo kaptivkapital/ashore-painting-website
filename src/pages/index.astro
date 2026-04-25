@@ -65,24 +65,43 @@ const jsonLd = {
   jsonLd={jsonLd}
 >
   <!-- HERO -->
-  <section class="hero hero-split">
-    <div class="hero-split-text">
-      <div class="hero-split-text-inner">
+  {homePage?.heroImage ? (
+    <section class="hero hero-split">
+      <div class="hero-split-text">
+        <div class="hero-split-text-inner">
+          <h1>{homePage?.heroHeading || 'Professional Painting Services in St. Augustine, FL'}</h1>
+          {homePage?.heroSubheading && <p class="hero-sub hero-sub-dark">{homePage.heroSubheading}</p>}
+          <div class="hero-actions">
+            <a href={`tel:${phoneDigits}`} class="btn btn-primary hero-btn">Call {businessInfo?.phone || 'Now'}</a>
+            <a href="/services" class="btn btn-outline hero-btn">View Services</a>
+          </div>
+          <div class="hero-trust-row">
+            <span>&#10003; Licensed & Insured</span>
+            <span>&#10003; Free Estimates</span>
+            <span>&#10003; Locally Owned</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-split-image" style={`background-image: url(${urlForImage(homePage.heroImage).width(800).height(600).url()})`}></div>
+    </section>
+  ) : (
+    <section class="hero hero-full">
+      <div class="hero-overlay"></div>
+      <div class="container hero-full-content">
         <h1>{homePage?.heroHeading || 'Professional Painting Services in St. Augustine, FL'}</h1>
         {homePage?.heroSubheading && <p class="hero-sub">{homePage.heroSubheading}</p>}
-        <div class="hero-actions">
+        <div class="hero-actions hero-actions-center">
           <a href={`tel:${phoneDigits}`} class="btn btn-primary hero-btn">Call {businessInfo?.phone || 'Now'}</a>
-          <a href="/services" class="btn btn-outline hero-btn">View Services</a>
+          <a href="/services" class="btn btn-white hero-btn">View Services</a>
         </div>
-        <div class="hero-trust-row">
+        <div class="hero-trust-row hero-trust-light">
           <span>&#10003; Licensed & Insured</span>
           <span>&#10003; Free Estimates</span>
           <span>&#10003; Locally Owned</span>
         </div>
       </div>
-    </div>
-    <div class="hero-split-image"></div>
-  </section>
+    </section>
+  )}
 
   <!-- SERVICES -->
   {homePage?.featuredServices && homePage.featuredServices.length > 0 && (
@@ -207,7 +226,82 @@ const jsonLd = {
 
   .hero-split-image {
     background: var(--color-primary);
+    background-size: cover;
+    background-position: center;
     min-height: 100%;
+  }
+
+  .hero-sub-dark {
+    color: var(--color-text-secondary);
+    margin-bottom: 28px;
+  }
+
+  /* Full-width hero (no image uploaded) */
+  .hero-full {
+    background: var(--color-primary);
+    position: relative;
+    min-height: 480px;
+    display: flex;
+    align-items: center;
+  }
+
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(27, 79, 114, 0.95), rgba(21, 67, 96, 0.85));
+  }
+
+  .hero-full-content {
+    position: relative;
+    z-index: 1;
+    color: var(--color-white);
+    padding: 80px 24px;
+    max-width: 680px;
+    text-align: center;
+    margin: 0 auto;
+  }
+
+  .hero-full h1 {
+    color: var(--color-white);
+    margin-bottom: 20px;
+  }
+
+  .hero-full .hero-sub {
+    color: rgba(255, 255, 255, 0.85);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .hero-actions-center {
+    justify-content: center;
+  }
+
+  .btn-white {
+    background: var(--color-white);
+    color: var(--color-primary);
+    border-color: var(--color-white);
+    padding: 14px 28px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+
+  .btn-white:hover {
+    background: transparent;
+    color: var(--color-white);
+    border-color: var(--color-white);
+  }
+
+  .hero-trust-light {
+    color: rgba(255, 255, 255, 0.7);
   }
 
   @media (max-width: 768px) {
@@ -218,6 +312,8 @@ const jsonLd = {
     .hero-actions { flex-direction: column; }
     .hero-btn { width: 100%; max-width: 320px; text-align: center; justify-content: center; }
     .hero-trust-row { flex-direction: column; gap: 8px; }
+    .hero-full-content { padding: 60px 16px; }
+    .hero-full h1 { font-size: 2rem; }
   }
 
   /* AREA STRIP */
