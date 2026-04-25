@@ -169,7 +169,7 @@ const jsonLd = [serviceJsonLd, faqJsonLd].filter(Boolean);
         <h2>Ready to Get Started?</h2>
         <p>Call us for a free, no-obligation estimate on your {service.title.toLowerCase()} project.</p>
         <a href={`tel:${phoneDigits}`} class="btn btn-phone">
-          <span aria-hidden="true">&#9742;</span> {businessInfo?.phone || 'Call Now'}
+          {businessInfo?.phone || 'Call Now'}
         </a>
       </section>
     </article>
