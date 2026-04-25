@@ -1,0 +1,140 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import PortableText from '../components/PortableText.astro';
+import { loadQuery } from '../sanity/lib/load-query';
+import { allFaqsQuery, businessInfoQuery } from '../sanity/lib/queries';
+
+const faqs = await loadQuery<any[]>({ query: allFaqsQuery });
+const businessInfo = await loadQuery<any>({ query: businessInfoQuery });
+const phoneDigits = businessInfo?.phone?.replace(/[^\d+]/g, '') || '';
+
+const categories = [...new Set(faqs?.map((f: any) => f.category || 'General'))];
+const grouped = categories.map((cat) => ({
+  category: cat,
+  items: faqs?.filter((f: any) => (f.category || 'General') === cat) || [],
+}));
+
+const breadcrumbs = [
+  { label: 'Home', url: '/' },
+  { label: 'FAQ', url: '/faq' },
+];
+
+const faqJsonLd = faqs && faqs.length > 0
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqs.map((faq: any) => ({
+        '@type': 'Question',
+        name: faq.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: faq.answer?.map((block: any) =>
+            block.children?.map((child: any) => child.text).join('')
+          ).join(' ') || '',
+        },
+      })),
+    }
+  : undefined;
+---
+
+<Layout
+  title="Painting FAQ | St. Augustine, FL"
+  description="Common questions about painting services in St. Augustine, FL. Pricing, timelines, preparation, materials, and more. Call for a free estimate."
+  jsonLd={faqJsonLd}
+>
+  <div class="container">
+    <Breadcrumbs items={breadcrumbs} />
+
+    <section class="section">
+      <div class="faq-page">
+        <h1>Frequently Asked Questions</h1>
+
+        {grouped.map(({ category, items }) => (
+          <div class="faq-cat">
+            <div class="faq-cat-header"><h2>{category}</h2></div>
+            <div class="faq-cat-body">
+              {items.map((faq: any) => (
+                <details class="faq-item">
+                  <summary>{faq.question}</summary>
+                  <div class="faq-answer"><PortableText value={faq.answer} /></div>
+                </details>
+              ))}
+            </div>
+          </div>
+        ))}
+
+        {(!faqs || faqs.length === 0) && (
+          <p style="color: var(--color-text-light); font-style: italic;">FAQ content coming soon.</p>
+        )}
+
+        <div class="faq-cta">
+          <h2>Still Have Questions?</h2>
+          <p>We're happy to help. Give us a call.</p>
+          <a href={`tel:${phoneDigits}`} class="btn btn-primary">Call {businessInfo?.phone}</a>
+        </div>
+      </div>
+    </section>
+  </div>
+</Layout>
+
+<style>
+  .faq-page { max-width: 780px; }
+  .faq-page h1 { margin-bottom: 48px; }
+
+  .faq-cat {
+    margin-bottom: 32px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .faq-cat-header {
+    background: var(--color-primary);
+    padding: 16px 24px;
+  }
+
+  .faq-cat-header h2 {
+    color: var(--color-white);
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0;
+  }
+
+  .faq-item {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .faq-item:last-child {
+    border-bottom: none;
+  }
+
+  .faq-item summary {
+    padding: 16px 24px;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+    transition: background var(--transition);
+    font-size: 0.9375rem;
+  }
+
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item summary:hover { background: var(--color-bg); }
+  .faq-item[open] summary { background: var(--color-bg); }
+
+  .faq-answer {
+    padding: 0 24px 16px;
+  }
+
+  .faq-cta {
+    margin-top: 64px;
+    padding: 48px;
+    background: var(--color-bg);
+    border-radius: 12px;
+    text-align: center;
+  }
+
+  .faq-cta h2 { margin-bottom: 12px; }
+  .faq-cta p { color: var(--color-text-secondary); margin-bottom: 24px; }
+</style>

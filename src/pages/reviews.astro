@@ -1,0 +1,70 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import TestimonialCard from '../components/TestimonialCard.astro';
+import { loadQuery } from '../sanity/lib/load-query';
+import { allTestimonialsQuery, aggregateRatingQuery, siteSettingsQuery } from '../sanity/lib/queries';
+
+const testimonials = await loadQuery<any[]>({ query: allTestimonialsQuery });
+const aggregateRating = await loadQuery<any>({ query: aggregateRatingQuery });
+const siteSettings = await loadQuery<any>({ query: siteSettingsQuery });
+
+const breadcrumbs = [
+  { label: 'Home', url: '/' },
+  { label: 'Reviews', url: '/reviews' },
+];
+---
+
+<Layout title="Reviews | Ashore Painting St. Augustine, FL" description="Read what homeowners in St. Augustine, FL say about Ashore Painting. Real reviews from customers across Northeast Florida.">
+  <div class="container">
+    <Breadcrumbs items={breadcrumbs} />
+
+    <section class="section">
+      <h1>What Our Clients Say</h1>
+
+      {aggregateRating?.reviewCount > 0 && (
+        <div class="aggregate-rating">
+          <span class="rating-value">{aggregateRating.ratingValue?.toFixed(1)}</span>
+          <span class="rating-stars" aria-label={`${aggregateRating.ratingValue?.toFixed(1)} out of 5 stars`}>
+            {'★'.repeat(Math.round(aggregateRating.ratingValue || 0))}{'☆'.repeat(5 - Math.round(aggregateRating.ratingValue || 0))}
+          </span>
+          <span class="rating-count">Based on {aggregateRating.reviewCount} reviews</span>
+        </div>
+      )}
+
+      {siteSettings?.googleBusinessProfileUrl && (
+        <p class="gbp-link">
+          <a href={siteSettings.googleBusinessProfileUrl} target="_blank" rel="noopener noreferrer">
+            See more reviews on Google
+          </a>
+        </p>
+      )}
+
+      <div class="testimonials-grid">
+        {testimonials?.map((t: any) => (
+          <TestimonialCard testimonial={t} />
+        ))}
+      </div>
+
+      {(!testimonials || testimonials.length === 0) && (
+        <p class="empty-state">Reviews coming soon.</p>
+      )}
+    </section>
+  </div>
+</Layout>
+
+<style>
+  h1 { margin-bottom: 16px; }
+  .aggregate-rating { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; }
+  .rating-value { font-size: 2.5rem; font-weight: 700; color: var(--color-primary); }
+  .rating-stars { font-size: 1.5rem; color: var(--color-warning); }
+  .rating-count { font-size: 0.9375rem; color: var(--color-text-secondary); }
+  .gbp-link { margin-bottom: 48px; }
+  .gbp-link a { font-weight: 500; }
+  .testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+  }
+  .empty-state { color: var(--color-text-light); font-style: italic; }
+</style>

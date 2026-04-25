@@ -1,0 +1,131 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import { loadQuery } from '../../sanity/lib/load-query';
+import { urlForImage } from '../../sanity/lib/url-for-image';
+import { projectSlugsQuery, projectBySlugQuery } from '../../sanity/lib/queries';
+
+export async function getStaticPaths() {
+  const slugs = await loadQuery<any[]>({ query: projectSlugsQuery });
+  return (slugs || []).map((s) => ({ params: { slug: s.slug } }));
+}
+
+const { slug } = Astro.params;
+const project = await loadQuery<any>({ query: projectBySlugQuery, params: { slug } });
+
+if (!project) return Astro.redirect('/404');
+
+const breadcrumbs = [
+  { label: 'Home', url: '/' },
+  { label: 'Gallery', url: '/gallery' },
+  { label: project.title, url: `/gallery/${slug}` },
+];
+---
+
+<Layout
+  title={project.seo?.metaTitle || project.title}
+  description={project.seo?.metaDescription || project.description}
+>
+  <div class="container">
+    <Breadcrumbs items={breadcrumbs} />
+
+    <article class="section">
+      <h1>{project.title}</h1>
+
+      <div class="project-meta">
+        {project.serviceName && (
+          <a href={`/services/${project.serviceSlug}`} class="meta-tag">{project.serviceName}</a>
+        )}
+        {project.areaName && (
+          <a href={`/areas/${project.areaSlug}`} class="meta-tag">{project.areaName}</a>
+        )}
+        {project.completedDate && (
+          <span class="meta-date">{new Date(project.completedDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+        )}
+      </div>
+
+      {project.description && <p class="project-desc">{project.description}</p>}
+
+      {project.beforeAfterPairs?.map((pair: any, i: number) => (
+        <div class="before-after-pair">
+          {pair.caption && <h2>{pair.caption}</h2>}
+          <div class="ba-grid">
+            <figure>
+              <img
+                src={urlForImage(pair.beforeImage).width(600).url()}
+                alt={pair.beforeImage?.alt || 'Before'}
+                width="600"
+                loading={i === 0 ? 'eager' : 'lazy'}
+              />
+              <figcaption>Before</figcaption>
+            </figure>
+            <figure>
+              <img
+                src={urlForImage(pair.afterImage).width(600).url()}
+                alt={pair.afterImage?.alt || 'After'}
+                width="600"
+                loading={i === 0 ? 'eager' : 'lazy'}
+              />
+              <figcaption>After</figcaption>
+            </figure>
+          </div>
+        </div>
+      ))}
+
+      {project.additionalImages?.length > 0 && (
+        <section class="additional-images">
+          <h2>More Photos</h2>
+          <div class="image-grid">
+            {project.additionalImages.map((img: any) => (
+              <figure>
+                <img
+                  src={urlForImage(img).width(400).url()}
+                  alt={img.alt || ''}
+                  width="400"
+                  loading="lazy"
+                />
+                {img.caption && <figcaption>{img.caption}</figcaption>}
+              </figure>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <div class="project-cta">
+        <p>Want similar results? <a href="/contact" class="btn btn-primary">Get a Free Estimate</a></p>
+      </div>
+    </article>
+  </div>
+</Layout>
+
+<style>
+  h1 { margin-bottom: 12px; }
+  .project-meta { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 24px; }
+  .meta-tag {
+    display: inline-block;
+    padding: 4px 12px;
+    background: var(--color-accent-light);
+    color: var(--color-accent);
+    border-radius: 4px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+  }
+  .meta-date { font-size: 0.875rem; color: var(--color-text-light); }
+  .project-desc { font-size: 1.125rem; color: var(--color-text-secondary); max-width: 700px; line-height: 1.7; margin-bottom: 48px; }
+  .before-after-pair { margin-bottom: 48px; }
+  .before-after-pair h2 { margin-bottom: 16px; }
+  .ba-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .ba-grid img { border-radius: 8px; width: 100%; }
+  .ba-grid figcaption { text-align: center; font-size: 0.875rem; color: var(--color-text-light); margin-top: 8px; font-weight: 500; }
+  .additional-images { margin-top: 48px; }
+  .additional-images h2 { margin-bottom: 16px; }
+  .image-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
+  .image-grid img { border-radius: 8px; width: 100%; }
+  .image-grid figcaption { font-size: 0.8125rem; color: var(--color-text-light); margin-top: 4px; }
+  .project-cta { margin-top: 48px; text-align: center; padding: 32px; background: var(--color-bg); border-radius: 12px; }
+  .project-cta p { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; font-size: 1.125rem; }
+
+  @media (max-width: 600px) {
+    .ba-grid { grid-template-columns: 1fr; }
+  }
+</style>

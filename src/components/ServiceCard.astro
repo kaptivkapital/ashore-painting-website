@@ -1,0 +1,73 @@
+---
+interface Props {
+  service: {
+    title: string;
+    slug: string;
+    shortDescription?: string;
+    mainImage?: any;
+  };
+}
+
+const { service } = Astro.props;
+---
+
+<a href={`/services/${service.slug}`} class="service-card">
+  <h3 class="service-card-title">{service.title}</h3>
+  {service.shortDescription && (
+    <p class="service-card-desc">{service.shortDescription}</p>
+  )}
+  <span class="service-card-link">View Services</span>
+</a>
+
+<style>
+  .service-card {
+    display: flex;
+    flex-direction: column;
+    padding: 32px 28px;
+    border: 2px solid var(--color-border);
+    border-radius: 4px;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color var(--transition);
+    background: var(--color-white);
+  }
+
+  .service-card:hover {
+    border-color: var(--color-primary);
+  }
+
+  .service-card-title {
+    font-size: 1.125rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin-bottom: 12px;
+    color: var(--color-primary);
+  }
+
+  .service-card-desc {
+    font-size: 0.9375rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+    flex-grow: 1;
+  }
+
+  .service-card-link {
+    display: inline-block;
+    margin-top: 16px;
+    padding: 10px 20px;
+    border: 2px solid var(--color-primary);
+    border-radius: 4px;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    transition: all var(--transition);
+    align-self: flex-start;
+  }
+
+  .service-card:hover .service-card-link {
+    background: var(--color-primary);
+    color: var(--color-white);
+  }
+</style>

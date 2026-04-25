@@ -1,0 +1,411 @@
+---
+import Layout from '../layouts/Layout.astro';
+import ServiceCard from '../components/ServiceCard.astro';
+import GoogleReviews from '../components/GoogleReviews';
+import { loadQuery } from '../sanity/lib/load-query';
+import { urlForImage } from '../sanity/lib/url-for-image';
+import {
+  homePageQuery,
+  businessInfoQuery,
+  allServiceAreasForSchemaQuery,
+  allServicesForSchemaQuery,
+  aggregateRatingQuery,
+  siteSettingsQuery,
+} from '../sanity/lib/queries';
+
+const homePage = await loadQuery<any>({ query: homePageQuery });
+const businessInfo = await loadQuery<any>({ query: businessInfoQuery });
+const serviceAreas = await loadQuery<any[]>({ query: allServiceAreasForSchemaQuery });
+const services = await loadQuery<any[]>({ query: allServicesForSchemaQuery });
+const aggregateRating = await loadQuery<any>({ query: aggregateRatingQuery });
+const siteSettings = await loadQuery<any>({ query: siteSettingsQuery });
+
+const site = Astro.site?.href?.replace(/\/$/, '') || 'https://ashorepainting.com';
+const phoneDigits = businessInfo?.phone?.replace(/[^\d+]/g, '') || '';
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': businessInfo?.schemaType || 'HousePainter',
+      '@id': `${site}/#business`,
+      name: businessInfo?.businessName,
+      description: businessInfo?.description,
+      url: site,
+      telephone: businessInfo?.phone,
+      ...(businessInfo?.logo && { logo: urlForImage(businessInfo.logo).width(400).url() }),
+      priceRange: businessInfo?.priceRange || '$$',
+      address: { '@type': 'PostalAddress', addressLocality: businessInfo?.city, addressRegion: businessInfo?.state, postalCode: businessInfo?.postalCode, addressCountry: 'US' },
+      ...(businessInfo?.geoLatitude && { geo: { '@type': 'GeoCoordinates', latitude: businessInfo.geoLatitude, longitude: businessInfo.geoLongitude } }),
+      areaServed: [
+        ...(serviceAreas?.map((a: any) => ({ '@type': 'City', name: a.name })) || []),
+        ...(businessInfo?.geoLatitude && businessInfo?.serviceRadius ? [{
+          '@type': 'GeoCircle',
+          geoMidpoint: { '@type': 'GeoCoordinates', latitude: businessInfo.geoLatitude, longitude: businessInfo.geoLongitude },
+          geoRadius: `${businessInfo.serviceRadius * 1609}`,
+        }] : []),
+      ],
+      makesOffer: services?.map((s: any) => ({ '@type': 'Offer', itemOffered: { '@type': 'Service', name: s.title, url: `${site}/services/${s.slug}` } })) || [],
+      ...(businessInfo?.hours && { openingHoursSpecification: businessInfo.hours.filter((h: any) => !h.closed).map((h: any) => ({ '@type': 'OpeningHoursSpecification', dayOfWeek: h.day, opens: h.opens, closes: h.closes })) }),
+      ...(businessInfo?.socialLinks?.length > 0 && { sameAs: businessInfo.socialLinks.map((l: any) => l.url) }),
+      paymentAccepted: 'Cash, Check, Credit Card',
+      currenciesAccepted: 'USD',
+      knowsAbout: [...(services?.map((s: any) => s.title) || []), 'Paint Selection', 'Surface Preparation', 'Coastal Florida Painting'],
+      hasMap: `https://www.google.com/maps/search/?api=1&query=${businessInfo?.geoLatitude},${businessInfo?.geoLongitude}`,
+    },
+    { '@type': 'WebSite', '@id': `${site}/#website`, url: site, name: businessInfo?.businessName, publisher: { '@id': `${site}/#business` } },
+  ],
+};
+---
+
+<Layout
+  title={homePage?.seo?.metaTitle || undefined}
+  description={homePage?.seo?.metaDescription || businessInfo?.description}
+  ogImage={homePage?.seo?.ogImage || homePage?.heroImage}
+  jsonLd={jsonLd}
+>
+  <!-- HERO -->
+  <section class="hero hero-split">
+    <div class="hero-split-text">
+      <div class="hero-split-text-inner">
+        <h1>{homePage?.heroHeading || 'Professional Painting Services in St. Augustine, FL'}</h1>
+        {homePage?.heroSubheading && <p class="hero-sub">{homePage.heroSubheading}</p>}
+        <div class="hero-actions">
+          <a href={`tel:${phoneDigits}`} class="btn btn-primary hero-btn">Call {businessInfo?.phone || 'Now'}</a>
+          <a href="/services" class="btn btn-outline hero-btn">View Services</a>
+        </div>
+        <div class="hero-trust-row">
+          <span>&#10003; Licensed & Insured</span>
+          <span>&#10003; Free Estimates</span>
+          <span>&#10003; Locally Owned</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-split-image"></div>
+  </section>
+
+  <!-- SERVICES -->
+  {homePage?.featuredServices && homePage.featuredServices.length > 0 && (
+    <section class="section">
+      <div class="container">
+        <h2 class="svc-heading">Our Services</h2>
+        <div class="svc-grid">
+          {homePage.featuredServices.map((svc: any, i: number) => (
+            <a href={`/services/${svc.slug}`} class="sc2">
+              <span class="sc2-num">{String(i + 1).padStart(2, '0')}</span>
+              <h3>{svc.title}</h3>
+              {svc.shortDescription && <p>{svc.shortDescription}</p>}
+              <span class="sc2-link">Learn More &rarr;</span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- WHY CHOOSE US (split layout like DRACK "Experienced Team") -->
+  {homePage?.whyChooseUsItems && homePage.whyChooseUsItems.length > 0 && (
+    <section class="section why-section">
+      <div class="container why-inner">
+        <div class="why-image-side">
+          {/* Placeholder for a real photo */}
+        </div>
+        <div class="why-content-side">
+          <h2>{homePage.whyChooseUsHeading || 'Why Choose Ashore Painting'}</h2>
+          <div class="why-list">
+            {homePage.whyChooseUsItems.map((item: any) => (
+              <div class="why-item">
+                <h3>{item.title}</h3>
+                <p>{item.description}</p>
+              </div>
+            ))}
+          </div>
+          <a href={`tel:${phoneDigits}`} class="btn btn-primary">
+            Call for a Free Estimate
+          </a>
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- GOOGLE REVIEWS -->
+  <section class="section" style="background: var(--color-bg)">
+    <div class="container">
+      <h2 class="reviews-heading">What Our Customers Say</h2>
+      <GoogleReviews
+        featurableId={siteSettings?.featurableWidgetId}
+        client:load
+      />
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="section cta-section">
+    <div class="container cta-inner">
+      <h2>{homePage?.ctaHeading || 'Ready to Get Started?'}</h2>
+      {homePage?.ctaText && <p class="cta-text">{homePage.ctaText}</p>}
+      <a href={`tel:${phoneDigits}`} class="btn btn-white cta-btn">
+        Call {businessInfo?.phone}
+      </a>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  /* HERO - Split Layout */
+  .hero-split {
+    min-height: 520px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: var(--color-white);
+  }
+
+  .hero-split-text {
+    display: flex;
+    align-items: center;
+    padding: 60px 48px 60px 0;
+  }
+
+  .hero-split-text-inner {
+    max-width: 520px;
+    margin-left: auto;
+    padding-left: 24px;
+  }
+
+  .hero-split h1 {
+    color: var(--color-primary);
+    margin-bottom: 16px;
+  }
+
+  .hero-split .hero-sub {
+    font-size: 1.0625rem;
+    color: var(--color-text-secondary);
+    margin-bottom: 28px;
+    line-height: 1.7;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .hero-btn {
+    padding: 16px 36px;
+    font-size: 0.9375rem;
+  }
+
+  .hero-trust-row {
+    display: flex;
+    gap: 24px;
+    margin-top: 32px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    flex-wrap: wrap;
+  }
+
+  .hero-split-image {
+    background: var(--color-primary);
+    min-height: 100%;
+  }
+
+  @media (max-width: 768px) {
+    .hero-split { grid-template-columns: 1fr; }
+    .hero-split-text { padding: 48px 24px; }
+    .hero-split-text-inner { margin-left: 0; max-width: 100%; padding-left: 0; }
+    .hero-split-image { min-height: 240px; order: -1; }
+    .hero-actions { flex-direction: column; }
+    .hero-btn { width: 100%; max-width: 320px; text-align: center; justify-content: center; }
+    .hero-trust-row { flex-direction: column; gap: 8px; }
+  }
+
+  /* AREA STRIP */
+  .area-strip {
+    background: var(--color-primary-dark);
+    padding: 14px 0;
+  }
+
+  .area-strip-inner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .area-strip a {
+    color: rgba(255, 255, 255, 0.85) !important;
+    padding: 2px 0;
+  }
+
+  .area-strip a:hover {
+    color: var(--color-white) !important;
+    text-decoration: underline;
+  }
+
+  .area-dot {
+    color: rgba(255, 255, 255, 0.3);
+    margin: 0 14px;
+  }
+
+  /* SECTION HEADING */
+  .section-heading {
+    margin-bottom: 40px;
+  }
+
+  /* SERVICE SECTION */
+  .svc-heading {
+    margin-bottom: 40px;
+  }
+
+  .svc-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    justify-items: center;
+  }
+
+  /* Numbered cards */
+  .sc2 {
+    display: flex;
+    flex-direction: column;
+    padding: 32px 28px;
+    background: var(--color-bg);
+    border-radius: 6px;
+    text-decoration: none;
+    color: inherit;
+    transition: background 250ms ease, box-shadow 250ms ease;
+    width: 100%;
+  }
+  .sc2:hover {
+    background: var(--color-white);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  }
+  .sc2-num {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--color-primary);
+    opacity: 0.12;
+    line-height: 1;
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
+  }
+  .sc2 h3 {
+    font-size: 1.0625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin-bottom: 10px;
+    color: var(--color-primary);
+  }
+  .sc2 p {
+    font-size: 0.9375rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+    flex-grow: 1;
+  }
+  .sc2-link {
+    display: inline-block;
+    margin-top: 16px;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  @media (max-width: 900px) {
+    .svc-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 600px) {
+    .svc-grid { grid-template-columns: 1fr; }
+  }
+
+  /* WHY CHOOSE US - split layout */
+  .why-section {
+    background: var(--color-bg);
+  }
+
+  .why-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: center;
+  }
+
+  .why-image-side {
+    background: var(--color-primary);
+    border-radius: 8px;
+    min-height: 400px;
+  }
+
+  .why-content-side h2 {
+    margin-bottom: 32px;
+  }
+
+  .why-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 32px;
+  }
+
+  .why-item h3 {
+    font-size: 1rem;
+    margin-bottom: 4px;
+  }
+
+  .why-item p {
+    color: var(--color-text-secondary);
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
+
+  /* TESTIMONIALS */
+  .testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+  }
+
+  /* CTA */
+  .cta-section {
+    background: var(--color-primary);
+    text-align: center;
+  }
+
+  .cta-inner h2 {
+    color: var(--color-white);
+    margin-bottom: 12px;
+  }
+
+  .cta-text {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1.0625rem;
+    max-width: 480px;
+    margin: 0 auto 32px;
+  }
+
+  .cta-btn {
+    padding: 16px 40px;
+    font-size: 0.9375rem;
+  }
+
+  @media (max-width: 768px) {
+    .hero-content { padding: 60px 16px; }
+    .hero h1 { font-size: 1.875rem; }
+    .hero-actions { flex-direction: column; align-items: center; }
+    .hero-btn { width: 100%; max-width: 320px; }
+    .why-inner { grid-template-columns: 1fr; gap: 32px; }
+    .why-image-side { min-height: 240px; order: -1; }
+    .area-strip-inner { font-size: 0.75rem; }
+    .area-dot { margin: 0 8px; }
+  }
+
+  /* GOOGLE REVIEWS */
+  .reviews-heading { margin-bottom: 32px; }
+</style>

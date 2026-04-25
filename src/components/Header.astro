@@ -1,0 +1,115 @@
+---
+import { urlForImage } from '../sanity/lib/url-for-image';
+
+interface Props {
+  businessInfo: any;
+  navigation: any;
+}
+
+const { businessInfo, navigation } = Astro.props;
+const logoUrl = businessInfo?.logo ? urlForImage(businessInfo.logo).width(200).url() : null;
+const phoneDigits = businessInfo?.phone?.replace(/[^\d+]/g, '') || '';
+---
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="/" class="logo-link" aria-label="Homepage">
+      {logoUrl ? (
+        <img src={logoUrl} alt={businessInfo?.logo?.alt || businessInfo?.businessName || 'Ashore Painting'} class="logo-img" />
+      ) : (
+        <span class="logo-text">{businessInfo?.businessName || 'Ashore Painting'}</span>
+      )}
+    </a>
+
+    <nav class="main-nav" aria-label="Main navigation" role="navigation">
+      {navigation?.items?.map((item: any) => (
+        <a
+          href={item.url}
+          class:list={['nav-link', { active: Astro.url.pathname === item.url || (Astro.url.pathname.startsWith(item.url) && item.url !== '/') }]}
+        >
+          {item.label}
+        </a>
+      ))}
+    </nav>
+
+    {businessInfo?.phone && (
+      <a href={`tel:${phoneDigits}`} class="btn btn-phone header-cta">
+        {businessInfo.phone}
+      </a>
+    )}
+  </div>
+</header>
+
+<style>
+  .site-header {
+    background: var(--color-white);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 3px solid var(--color-primary);
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    gap: 32px;
+  }
+
+  .logo-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+
+  .logo-img {
+    height: 40px;
+    width: auto;
+  }
+
+  .logo-text {
+    font-size: 1.375rem;
+    font-weight: 800;
+    color: var(--color-primary);
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+  }
+
+  .main-nav {
+    display: flex;
+    gap: 4px;
+  }
+
+  .nav-link {
+    padding: 8px 14px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--color-text);
+    transition: color var(--transition);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .nav-link:hover,
+  .nav-link.active {
+    color: var(--color-primary);
+  }
+
+  .header-cta {
+    padding: 10px 24px;
+    font-size: 0.875rem;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 900px) {
+    .main-nav { display: none; }
+  }
+
+  @media (max-width: 480px) {
+    .header-cta { display: none; }
+    .logo-text { font-size: 1.125rem; }
+  }
+</style>

@@ -1,0 +1,110 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import PortableText from '../../components/PortableText.astro';
+import { loadQuery } from '../../sanity/lib/load-query';
+import { urlForImage } from '../../sanity/lib/url-for-image';
+import { blogPostSlugsQuery, blogPostBySlugQuery, businessInfoQuery } from '../../sanity/lib/queries';
+
+export async function getStaticPaths() {
+  const slugs = await loadQuery<any[]>({ query: blogPostSlugsQuery });
+  return (slugs || []).map((s) => ({ params: { slug: s.slug } }));
+}
+
+const { slug } = Astro.params;
+const post = await loadQuery<any>({ query: blogPostBySlugQuery, params: { slug } });
+const businessInfo = await loadQuery<any>({ query: businessInfoQuery });
+
+if (!post) return Astro.redirect('/404');
+
+const site = Astro.site?.href?.replace(/\/$/, '') || 'https://ashorepainting.com';
+const breadcrumbs = [
+  { label: 'Home', url: '/' },
+  { label: 'Blog', url: '/blog' },
+  { label: post.title, url: `/blog/${slug}` },
+];
+
+const mainImageUrl = post.mainImage ? urlForImage(post.mainImage).width(900).url() : null;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: post.title,
+  description: post.excerpt || post.seo?.metaDescription,
+  ...(mainImageUrl && { image: mainImageUrl }),
+  datePublished: post.publishedAt,
+  author: {
+    '@type': 'Person',
+    name: 'Ashley Shea',
+  },
+  publisher: {
+    '@type': 'Organization',
+    '@id': `${site}/#business`,
+    name: businessInfo?.businessName,
+  },
+  url: `${site}/blog/${slug}`,
+};
+---
+
+<Layout
+  title={post.seo?.metaTitle || post.title}
+  description={post.seo?.metaDescription || post.excerpt}
+  ogImage={post.seo?.ogImage || post.mainImage}
+  jsonLd={jsonLd}
+>
+  <div class="container">
+    <Breadcrumbs items={breadcrumbs} />
+
+    <article class="section blog-post">
+      <header class="post-header">
+        <h1>{post.title}</h1>
+        {post.publishedAt && (
+          <time datetime={post.publishedAt}>
+            {new Date(post.publishedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+          </time>
+        )}
+      </header>
+
+      {mainImageUrl && (
+        <img src={mainImageUrl} alt={post.mainImage?.alt || post.title} class="post-hero-img" width="900" />
+      )}
+
+      {post.body && (
+        <div class="post-body">
+          <PortableText value={post.body} />
+        </div>
+      )}
+
+      {post.relatedServices && post.relatedServices.length > 0 && (
+        <aside class="related-services">
+          <h3>Related Services</h3>
+          <div class="related-links">
+            {post.relatedServices.map((svc: any) => (
+              <a href={`/services/${svc.slug}`} class="related-link">{svc.title}</a>
+            ))}
+          </div>
+        </aside>
+      )}
+
+      <div class="post-cta">
+        <p>Need professional painting help? <a href="/contact">Get a free estimate.</a></p>
+      </div>
+    </article>
+  </div>
+</Layout>
+
+<style>
+  .blog-post { max-width: 780px; }
+  .post-header { margin-bottom: 32px; }
+  .post-header h1 { margin-bottom: 8px; }
+  .post-header time { font-size: 0.875rem; color: var(--color-text-light); }
+  .post-hero-img { width: 100%; border-radius: 8px; margin-bottom: 32px; }
+  .post-body { margin-bottom: 48px; }
+  .related-services { padding: 24px; background: var(--color-bg); border-radius: 8px; margin-bottom: 32px; }
+  .related-services h3 { font-size: 1rem; margin-bottom: 12px; }
+  .related-links { display: flex; gap: 8px; flex-wrap: wrap; }
+  .related-link { padding: 6px 14px; background: var(--color-white); border: 1px solid var(--color-border); border-radius: 4px; font-size: 0.875rem; }
+  .related-link:hover { border-color: var(--color-accent); }
+  .post-cta { text-align: center; padding: 24px; background: var(--color-accent-light); border-radius: 8px; }
+  .post-cta a { font-weight: 600; }
+</style>

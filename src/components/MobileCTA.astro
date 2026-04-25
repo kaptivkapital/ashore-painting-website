@@ -1,0 +1,16 @@
+---
+interface Props {
+  phone: string;
+}
+
+const { phone } = Astro.props;
+const phoneDigits = phone?.replace(/[^\d+]/g, '') || '';
+---
+
+{phone && (
+  <div class="mobile-cta" aria-label="Call us">
+    <a href={`tel:${phoneDigits}`}>
+      &#9742; Call {phone}
+    </a>
+  </div>
+)}

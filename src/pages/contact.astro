@@ -1,0 +1,273 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import { loadQuery } from '../sanity/lib/load-query';
+import { businessInfoQuery } from '../sanity/lib/queries';
+
+const businessInfo = await loadQuery<any>({ query: businessInfoQuery });
+const phoneDigits = businessInfo?.phone?.replace(/[^\d+]/g, '') || '';
+
+function formatTime(t: string) {
+  const [h, m] = t.split(':').map(Number);
+  const period = h >= 12 ? 'PM' : 'AM';
+  const hour = h % 12 || 12;
+  return m === 0 ? `${hour} ${period}` : `${hour}:${String(m).padStart(2, '0')} ${period}`;
+}
+
+const breadcrumbs = [
+  { label: 'Home', url: '/' },
+  { label: 'Contact', url: '/contact' },
+];
+---
+
+<Layout title="Contact Ashore Painting in St. Augustine, FL" description={`Contact ${businessInfo?.businessName || 'Ashore Painting'} for a free painting estimate in St. Augustine, FL and surrounding areas. Call ${businessInfo?.phone} today.`}>
+  <div class="container">
+    <Breadcrumbs items={breadcrumbs} />
+
+    <section class="section contact-page">
+      <div class="contact-hero">
+        <h1>Get Your Free Estimate</h1>
+        <p class="contact-intro">
+          Ready to start your painting project? Give us a call and we will schedule a free, no-obligation consultation at your home or business.
+        </p>
+
+        <div class="phone-block">
+          <a href={`tel:${phoneDigits}`} class="btn btn-phone contact-phone-btn">
+            <span aria-hidden="true">&#9742;</span> {businessInfo?.phone}
+          </a>
+          <p class="phone-note">Monday - Friday, 8:00 AM - 5:00 PM</p>
+        </div>
+      </div>
+
+      <div class="contact-details">
+        <div class="contact-card">
+          <h2>What to Expect</h2>
+          <div class="expect-steps">
+            <div class="expect-step">
+              <span class="expect-number">1</span>
+              <div>
+                <h3>Call Us</h3>
+                <p>Tell us about your project. We will ask a few questions to understand the scope and schedule a time to visit.</p>
+              </div>
+            </div>
+            <div class="expect-step">
+              <span class="expect-number">2</span>
+              <div>
+                <h3>Free On-Site Estimate</h3>
+                <p>We visit your property, assess the surfaces, discuss colors and products, and provide a clear written estimate.</p>
+              </div>
+            </div>
+            <div class="expect-step">
+              <span class="expect-number">3</span>
+              <div>
+                <h3>Get Started</h3>
+                <p>Once you approve the estimate, we schedule the work at a time that works for you. No deposits required to book.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="contact-info-card">
+          <h2>Contact Information</h2>
+
+          {businessInfo?.phone && (
+            <div class="info-item">
+              <h4>Phone</h4>
+              <a href={`tel:${phoneDigits}`} class="info-phone">{businessInfo.phone}</a>
+            </div>
+          )}
+
+          {businessInfo?.email && (
+            <div class="info-item">
+              <h4>Email</h4>
+              <a href={`mailto:${businessInfo.email}`}>{businessInfo.email}</a>
+            </div>
+          )}
+
+          <div class="info-item">
+            <h4>Service Area</h4>
+            <p>St. Augustine, FL & surrounding communities</p>
+            <a href="/areas" class="info-link">View all service areas</a>
+          </div>
+
+          {businessInfo?.hours && businessInfo.hours.length > 0 && (
+            <div class="info-item">
+              <h4>Hours</h4>
+              {businessInfo.hours.map((h: any) => (
+                <div class="hours-row">
+                  <span>{h.day}</span>
+                  <span>{h.closed ? 'Closed' : `${formatTime(h.opens)} - ${formatTime(h.closes)}`}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  </div>
+</Layout>
+
+<style>
+  .contact-hero {
+    text-align: center;
+    padding: 48px 0;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .contact-hero h1 { margin-bottom: 16px; }
+
+  .contact-intro {
+    font-size: 1.125rem;
+    color: var(--color-text-secondary);
+    line-height: 1.7;
+    margin-bottom: 32px;
+  }
+
+  .phone-block {
+    margin-bottom: 16px;
+  }
+
+  .contact-phone-btn {
+    font-size: 1.5rem;
+    padding: 20px 48px;
+    display: inline-flex;
+    gap: 12px;
+  }
+
+  .phone-note {
+    font-size: 0.875rem;
+    color: var(--color-text-light);
+    margin-top: 12px;
+  }
+
+  .contact-details {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 48px;
+    align-items: start;
+    margin-top: 24px;
+  }
+
+  .contact-card {
+    background: var(--color-bg);
+    border-radius: 12px;
+    padding: 36px;
+  }
+
+  .contact-card h2 {
+    font-size: 1.25rem;
+    margin-bottom: 24px;
+  }
+
+  .expect-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .expect-step {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .expect-number {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: var(--color-white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1rem;
+  }
+
+  .expect-step h3 {
+    font-size: 1rem;
+    margin-bottom: 4px;
+  }
+
+  .expect-step p {
+    color: var(--color-text-secondary);
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
+
+  .contact-info-card {
+    background: var(--color-primary);
+    color: var(--color-white);
+    border-radius: 12px;
+    padding: 36px;
+  }
+
+  .contact-info-card h2 {
+    color: var(--color-white);
+    font-size: 1.125rem;
+    margin-bottom: 24px;
+  }
+
+  .info-item {
+    margin-bottom: 20px;
+  }
+
+  .info-item h4 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-highlight);
+    margin-bottom: 4px;
+    font-weight: 700;
+  }
+
+  .info-phone {
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: var(--color-highlight) !important;
+  }
+
+  .info-item a {
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+
+  .info-item a:hover {
+    color: var(--color-highlight) !important;
+  }
+
+  .info-item p {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9375rem;
+  }
+
+  .info-link {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    display: inline-block;
+    margin-top: 4px;
+  }
+
+  .hours-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 2px;
+  }
+
+  @media (max-width: 768px) {
+    .contact-details {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    .contact-phone-btn {
+      font-size: 1.25rem;
+      padding: 16px 32px;
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>

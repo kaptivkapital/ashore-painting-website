@@ -1,0 +1,37 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import PortableText from '../components/PortableText.astro';
+import { loadQuery } from '../sanity/lib/load-query';
+import { pageBySlugQuery } from '../sanity/lib/queries';
+
+const page = await loadQuery<any>({ query: pageBySlugQuery, params: { slug: 'privacy-policy' } });
+
+const breadcrumbs = [
+  { label: 'Home', url: '/' },
+  { label: 'Privacy Policy', url: '/privacy-policy' },
+];
+---
+
+<Layout
+  title={page?.seo?.metaTitle || 'Privacy Policy'}
+  description={page?.seo?.metaDescription || 'Privacy policy for Ashore Painting.'}
+  noindex={true}
+>
+  <div class="container">
+    <Breadcrumbs items={breadcrumbs} />
+    <article class="section legal-page">
+      <h1>{page?.title || 'Privacy Policy'}</h1>
+      {page?.body ? (
+        <PortableText value={page.body} />
+      ) : (
+        <p>Privacy policy content is managed in our CMS. Update it in the admin panel.</p>
+      )}
+    </article>
+  </div>
+</Layout>
+
+<style>
+  .legal-page { max-width: 780px; }
+  .legal-page h1 { margin-bottom: 24px; }
+</style>

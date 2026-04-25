@@ -1,0 +1,178 @@
+---
+interface Props {
+  formEndpoint?: string;
+}
+
+const { formEndpoint } = Astro.props;
+---
+
+<form
+  class="contact-form"
+  data-endpoint={formEndpoint || ''}
+  id="contact-form"
+>
+  <div class="form-grid">
+    <div class="form-group">
+      <label for="name">Name <span class="required">*</span></label>
+      <input type="text" id="name" name="name" required autocomplete="name" />
+    </div>
+
+    <div class="form-group">
+      <label for="phone">Phone <span class="required">*</span></label>
+      <input type="tel" id="phone" name="phone" required autocomplete="tel" />
+    </div>
+
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" autocomplete="email" />
+    </div>
+
+    <div class="form-group">
+      <label for="service">Service Interested In</label>
+      <select id="service" name="service">
+        <option value="">Select a service</option>
+        <option value="interior-painting">Interior Painting</option>
+        <option value="exterior-painting">Exterior Painting</option>
+        <option value="cabinet-painting">Cabinet Painting</option>
+        <option value="deck-staining">Deck Staining</option>
+        <option value="commercial-painting">Commercial Painting</option>
+        <option value="color-consultation">Color Consultation</option>
+        <option value="drywall-repair">Drywall Repair</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="message">Tell us about your project <span class="required">*</span></label>
+    <textarea id="message" name="message" rows={5} required></textarea>
+  </div>
+
+  <!-- Honeypot -->
+  <div style="display:none" aria-hidden="true">
+    <input type="text" name="_gotcha" tabindex={-1} autocomplete="off" />
+  </div>
+
+  <button type="submit" class="btn btn-primary form-submit">
+    Request a Free Estimate
+  </button>
+
+  <p class="form-note">
+    We typically respond within 24 hours.
+  </p>
+</form>
+
+<script>
+  const form = document.getElementById('contact-form') as HTMLFormElement;
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const endpoint = form.dataset.endpoint;
+      if (!endpoint) {
+        alert('Form submissions are not yet configured. Please call us directly.');
+        return;
+      }
+      const data = new FormData(form);
+      const body = Object.fromEntries(data.entries());
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (res.ok) {
+          form.innerHTML = '<p class="form-success">Thank you! We\'ll be in touch soon.</p>';
+        } else {
+          alert('Something went wrong. Please try again or call us directly.');
+        }
+      } catch {
+        alert('Something went wrong. Please try again or call us directly.');
+      }
+    });
+  }
+</script>
+
+<style>
+  .contact-form {
+    max-width: 640px;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 16px;
+  }
+
+  .form-grid .form-group {
+    margin-bottom: 0;
+  }
+
+  label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text);
+  }
+
+  .required {
+    color: #e53e3e;
+  }
+
+  input,
+  select,
+  textarea {
+    padding: 10px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    font-size: 1rem;
+    font-family: inherit;
+    color: var(--color-text);
+    background: var(--color-white);
+    transition: border-color var(--transition);
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-accent-light);
+  }
+
+  textarea {
+    resize: vertical;
+  }
+
+  .form-submit {
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  .form-note {
+    text-align: center;
+    font-size: 0.8125rem;
+    color: var(--color-text-light);
+    margin-top: 12px;
+  }
+
+  :global(.form-success) {
+    text-align: center;
+    padding: 32px;
+    color: var(--color-success);
+    font-weight: 600;
+    font-size: 1.125rem;
+  }
+
+  @media (max-width: 480px) {
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

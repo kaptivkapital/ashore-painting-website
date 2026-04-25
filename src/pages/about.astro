@@ -1,0 +1,55 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import PortableText from '../components/PortableText.astro';
+import { loadQuery } from '../sanity/lib/load-query';
+import { pageBySlugQuery } from '../sanity/lib/queries';
+
+const page = await loadQuery<any>({ query: pageBySlugQuery, params: { slug: 'about' } });
+
+const breadcrumbs = [
+  { label: 'Home', url: '/' },
+  { label: 'About', url: '/about' },
+];
+---
+
+<Layout
+  title={page?.seo?.metaTitle || 'About Us'}
+  description={page?.seo?.metaDescription || 'Learn about Ashore Painting, a professional painting company serving St. Augustine, FL and surrounding areas.'}
+  ogImage={page?.seo?.ogImage}
+>
+  <div class="container">
+    <Breadcrumbs items={breadcrumbs} />
+
+    <article class="section about-page">
+      <h1>{page?.title || 'About Ashore Painting'}</h1>
+
+      {page?.body ? (
+        <div class="about-body">
+          <PortableText value={page.body} />
+        </div>
+      ) : (
+        <div class="about-body">
+          <p>
+            Ashore Painting is a professional painting company serving St. Augustine, FL and surrounding areas.
+            We specialize in interior and exterior painting, cabinet refinishing, and more.
+          </p>
+          <p>
+            Content for this page is managed in our CMS. Update it in the admin panel.
+          </p>
+        </div>
+      )}
+
+      <div class="about-cta">
+        <a href="/contact" class="btn btn-primary">Get in Touch</a>
+      </div>
+    </article>
+  </div>
+</Layout>
+
+<style>
+  .about-page { max-width: 780px; }
+  .about-page h1 { margin-bottom: 24px; }
+  .about-body { margin-bottom: 48px; }
+  .about-cta { margin-top: 32px; }
+</style>

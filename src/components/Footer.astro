@@ -1,0 +1,158 @@
+---
+interface Props {
+  businessInfo: any;
+  services?: any[];
+}
+
+const { businessInfo, services } = Astro.props;
+const currentYear = new Date().getFullYear();
+const phoneDigits = businessInfo?.phone?.replace(/[^\d+]/g, '') || '';
+
+function formatTime(t: string) {
+  const [h, m] = t.split(':').map(Number);
+  const period = h >= 12 ? 'PM' : 'AM';
+  const hour = h % 12 || 12;
+  return m === 0 ? `${hour} ${period}` : `${hour}:${String(m).padStart(2, '0')} ${period}`;
+}
+---
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <div class="footer-main">
+      <div class="footer-brand">
+        <h4 class="footer-name">{businessInfo?.businessName || 'Ashore Painting'}</h4>
+        {businessInfo?.tagline && <p class="footer-tagline">{businessInfo.tagline}</p>}
+        {businessInfo?.phone && (
+          <a href={`tel:${phoneDigits}`} class="footer-phone">{businessInfo.phone}</a>
+        )}
+        {(businessInfo?.city || businessInfo?.state) && (
+          <p class="footer-location">
+            {[businessInfo.city, businessInfo.state].filter(Boolean).join(', ')}
+            {businessInfo.postalCode && ` ${businessInfo.postalCode}`}
+          </p>
+        )}
+      </div>
+
+      <div class="footer-nav">
+        <h5>Services</h5>
+        {services?.map((svc: any) => (
+          <a href={`/services/${svc.slug}`}>{svc.title}</a>
+        ))}
+      </div>
+
+      <div class="footer-nav">
+        <h5>Company</h5>
+        <a href="/about">About</a>
+        <a href="/areas">Service Areas</a>
+        <a href="/faq">FAQ</a>
+        <a href="/reviews">Reviews</a>
+        <a href="/contact">Contact</a>
+      </div>
+
+      <div class="footer-nav">
+        <h5>Hours</h5>
+        {businessInfo?.hours?.map((h: any) => (
+          <span class="footer-hours-row">
+            {h.day}: {h.closed ? 'Closed' : `${formatTime(h.opens)} - ${formatTime(h.closes)}`}
+          </span>
+        ))}
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; {currentYear} {businessInfo?.businessName || 'Ashore Painting'}. All rights reserved.</p>
+      <a href="/privacy-policy">Privacy Policy</a>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background: var(--color-primary);
+    color: var(--color-white);
+    padding: 56px 0 24px;
+  }
+
+  .site-footer a {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.9375rem;
+  }
+
+  .site-footer a:hover {
+    color: var(--color-white);
+  }
+
+  .footer-main {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1.5fr;
+    gap: 48px;
+  }
+
+  .footer-name {
+    color: var(--color-white);
+    font-size: 1.125rem;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  .footer-tagline {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.875rem;
+    margin-bottom: 16px;
+  }
+
+  .footer-phone {
+    display: block;
+    font-weight: 700;
+    font-size: 1.125rem !important;
+    color: var(--color-white) !important;
+    margin-bottom: 8px;
+  }
+
+  .footer-location {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.8125rem;
+  }
+
+  .footer-nav h5 {
+    color: var(--color-white);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 16px;
+    font-weight: 700;
+  }
+
+  .footer-nav a {
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .footer-hours-row {
+    display: block;
+    font-size: 0.8125rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 2px;
+  }
+
+  .footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 24px;
+    margin-top: 32px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.8125rem;
+    color: rgba(255, 255, 255, 0.35);
+  }
+
+  @media (max-width: 768px) {
+    .footer-main { grid-template-columns: 1fr 1fr; gap: 32px; }
+    .footer-bottom { flex-direction: column; gap: 8px; text-align: center; }
+  }
+
+  @media (max-width: 480px) {
+    .footer-main { grid-template-columns: 1fr; }
+  }
+</style>

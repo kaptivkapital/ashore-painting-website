@@ -1,0 +1,113 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import { loadQuery } from '../../sanity/lib/load-query';
+import { allServiceAreasQuery } from '../../sanity/lib/queries';
+
+const areas = await loadQuery<any[]>({ query: allServiceAreasQuery });
+
+const breadcrumbs = [
+  { label: 'Home', url: '/' },
+  { label: 'Service Areas', url: '/areas' },
+];
+---
+
+<Layout title="Service Areas | St. Augustine, FL Painters" description="Professional painting services in St. Augustine, Ponte Vedra Beach, Nocatee, World Golf Village, and surrounding Northeast Florida communities.">
+  <div class="container">
+    <Breadcrumbs items={breadcrumbs} />
+    <section class="section">
+      <h1>Painting Service Areas in Northeast Florida</h1>
+      <p class="page-intro text-secondary">
+        We provide professional painting services throughout the St. Augustine area and Northeast Florida.
+      </p>
+      <div class="area-grid">
+        {areas?.map((area: any) => (
+          <a href={`/areas/${area.slug}`} class="area-card">
+            <div class="area-card-header">
+              <h2>{area.name}</h2>
+              {area.county && <span>{area.county}</span>}
+            </div>
+            <div class="area-card-body">
+              {area.description && <p>{area.description}</p>}
+              <span class="area-card-link">Learn More &rarr;</span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+  </div>
+</Layout>
+
+<style>
+  h1 { margin-bottom: 12px; }
+  .page-intro { font-size: 1.125rem; margin-bottom: 48px; max-width: 600px; }
+
+  .area-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    justify-items: center;
+  }
+
+  .area-card {
+    display: flex;
+    flex-direction: column;
+    border-radius: 6px;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    border: 1px solid var(--color-border);
+    width: 100%;
+    transition: box-shadow 250ms ease, transform 250ms ease;
+  }
+  .area-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+  }
+
+  .area-card-header {
+    background: var(--color-primary);
+    padding: 20px 24px;
+    color: var(--color-white);
+  }
+  .area-card h2 {
+    font-size: 1.0625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--color-white);
+    margin-bottom: 2px;
+  }
+  .area-card-header span {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .area-card-body {
+    padding: 24px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .area-card p {
+    font-size: 0.9375rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+    flex-grow: 1;
+  }
+  .area-card-link {
+    display: inline-block;
+    margin-top: 16px;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  @media (max-width: 900px) {
+    .area-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 600px) {
+    .area-grid { grid-template-columns: 1fr; }
+  }
+</style>

@@ -1,0 +1,93 @@
+---
+import { urlForImage } from '../sanity/lib/url-for-image';
+
+interface Props {
+  project: {
+    title: string;
+    slug: string;
+    description?: string;
+    serviceName?: string;
+    beforeAfterPairs?: any[];
+  };
+}
+
+const { project } = Astro.props;
+const afterImage = project.beforeAfterPairs?.[0]?.afterImage;
+const imageUrl = afterImage
+  ? urlForImage(afterImage).width(400).height(300).url()
+  : null;
+---
+
+<a href={`/gallery/${project.slug}`} class="project-card">
+  {imageUrl && (
+    <img
+      src={imageUrl}
+      alt={afterImage?.alt || project.title}
+      width="400"
+      height="300"
+      loading="lazy"
+      class="project-card-img"
+    />
+  )}
+  <div class="project-card-body">
+    <h3 class="project-card-title">{project.title}</h3>
+    {project.serviceName && (
+      <span class="project-card-tag">{project.serviceName}</span>
+    )}
+    {project.description && (
+      <p class="project-card-desc">{project.description}</p>
+    )}
+  </div>
+</a>
+
+<style>
+  .project-card {
+    display: block;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    transition: all var(--transition);
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .project-card:hover {
+    border-color: var(--color-accent);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+  }
+
+  .project-card-img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+  }
+
+  .project-card-body {
+    padding: 16px;
+  }
+
+  .project-card-title {
+    font-size: 1rem;
+    margin-bottom: 4px;
+    color: var(--color-primary);
+  }
+
+  .project-card-tag {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--color-accent);
+    background: var(--color-accent-light);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+  }
+
+  .project-card-desc {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+  }
+</style>

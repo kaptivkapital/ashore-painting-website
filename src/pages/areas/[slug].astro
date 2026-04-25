@@ -1,0 +1,255 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import PortableText from '../../components/PortableText.astro';
+import ServiceCard from '../../components/ServiceCard.astro';
+import TestimonialCard from '../../components/TestimonialCard.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+import { loadQuery } from '../../sanity/lib/load-query';
+import {
+  serviceAreaSlugsQuery,
+  serviceAreaBySlugQuery,
+  testimonialsByAreaQuery,
+  projectsByAreaQuery,
+  allServiceAreasQuery,
+  businessInfoQuery,
+} from '../../sanity/lib/queries';
+
+export async function getStaticPaths() {
+  const slugs = await loadQuery<any[]>({ query: serviceAreaSlugsQuery });
+  return (slugs || []).map((s) => ({ params: { slug: s.slug } }));
+}
+
+const { slug } = Astro.params;
+const area = await loadQuery<any>({ query: serviceAreaBySlugQuery, params: { slug } });
+
+if (!area) return Astro.redirect('/404');
+
+const businessInfo = await loadQuery<any>({ query: businessInfoQuery });
+const testimonials = await loadQuery<any[]>({
+  query: testimonialsByAreaQuery,
+  params: { areaId: area._id },
+});
+const projects = await loadQuery<any[]>({
+  query: projectsByAreaQuery,
+  params: { areaId: area._id },
+});
+const allAreas = await loadQuery<any[]>({ query: allServiceAreasQuery });
+const otherAreas = allAreas?.filter((a: any) => a.slug !== slug) || [];
+
+const site = Astro.site?.href?.replace(/\/$/, '') || 'https://ashorepainting.com';
+const breadcrumbs = [
+  { label: 'Home', url: '/' },
+  { label: 'Service Areas', url: '/areas' },
+  { label: area.name, url: `/areas/${slug}` },
+];
+
+// LocalBusiness variant with specific areaServed
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': businessInfo?.schemaType || 'HousePainter',
+  '@id': `${site}/#business`,
+  name: businessInfo?.businessName,
+  url: `${site}/areas/${slug}`,
+  telephone: businessInfo?.phone,
+  areaServed: {
+    '@type': 'City',
+    name: area.name,
+  },
+  ...(area.services && {
+    makesOffer: area.services.map((svc: any) => ({
+      '@type': 'Offer',
+      itemOffered: {
+        '@type': 'Service',
+        name: svc.title,
+        url: `${site}/services/${svc.slug}`,
+      },
+    })),
+  }),
+};
+---
+
+<Layout
+  title={area.seo?.metaTitle || `Painting Services in ${area.name}, FL`}
+  description={area.seo?.metaDescription || area.description || `Professional painting services in ${area.name}, Florida. Interior, exterior, cabinet painting and more.`}
+  ogImage={area.seo?.ogImage || area.heroImage}
+  jsonLd={jsonLd}
+>
+  <div class="container">
+    <Breadcrumbs items={breadcrumbs} />
+
+    <article class="section">
+      <h1>Painting Services in {area.name}, FL</h1>
+
+      {area.description && <p class="area-intro">{area.description}</p>}
+
+      {area.body && (
+        <div class="area-body">
+          <PortableText value={area.body} />
+        </div>
+      )}
+
+      {area.localInsights && (
+        <div class="area-insights">
+          <h2>What Makes {area.name} Unique</h2>
+          <p>{area.localInsights}</p>
+        </div>
+      )}
+
+      {area.housingTypes && (
+        <div class="area-housing">
+          <h3>Common Housing Types</h3>
+          <p>{area.housingTypes}</p>
+        </div>
+      )}
+
+      <!-- Services in this area -->
+      {area.services && area.services.length > 0 && (
+        <section class="area-section">
+          <h2>Services Available in {area.name}</h2>
+          <div class="grid-3">
+            {area.services.map((svc: any) => (
+              <ServiceCard service={svc} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      <!-- Projects in this area -->
+      {projects && projects.length > 0 && (
+        <section class="area-section">
+          <h2>Recent Projects in {area.name}</h2>
+          <div class="grid-3">
+            {projects.map((proj: any) => (
+              <ProjectCard project={proj} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      <!-- Testimonials from this area -->
+      {testimonials && testimonials.length > 0 && (
+        <section class="area-section">
+          <h2>What {area.name} Homeowners Say</h2>
+          <div class="grid-2">
+            {testimonials.map((t: any) => (
+              <TestimonialCard testimonial={t} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      <!-- Neighborhoods -->
+      {area.neighborhoods && area.neighborhoods.length > 0 && (
+        <section class="area-section">
+          <h2>Neighborhoods We Serve in {area.name}</h2>
+          <ul class="neighborhoods-list">
+            {area.neighborhoods.map((n: string) => (
+              <li>{n}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <!-- Map -->
+      {area.mapEmbedUrl && (
+        <section class="area-section">
+          <h2>Our Service Area in {area.name}</h2>
+          <div class="map-container">
+            <iframe
+              src={area.mapEmbedUrl}
+              width="100%"
+              height="400"
+              style="border:0"
+              allowfullscreen
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              title={`Map of ${area.name} service area`}
+            ></iframe>
+          </div>
+        </section>
+      )}
+
+      <!-- Other areas -->
+      {otherAreas.length > 0 && (
+        <section class="area-section">
+          <h2>Also Serving Nearby Areas</h2>
+          <div class="other-areas">
+            {otherAreas.map((a: any) => (
+              <a href={`/areas/${a.slug}`} class="other-area-link">{a.name}</a>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <!-- CTA -->
+      <section class="area-cta">
+        <h2>Get a Free Estimate in {area.name}</h2>
+        <p>Ready to transform your home? Contact us for a free, no-obligation painting estimate.</p>
+        <a href="/contact" class="btn btn-primary">Request an Estimate</a>
+      </section>
+    </article>
+  </div>
+</Layout>
+
+<style>
+  h1 { margin-bottom: 16px; }
+  .area-intro { font-size: 1.125rem; color: var(--color-text-secondary); max-width: 700px; line-height: 1.7; margin-bottom: 32px; }
+  .area-body { max-width: 780px; margin-bottom: 48px; }
+  .area-insights, .area-housing { max-width: 700px; margin-bottom: 32px; }
+  .area-insights h2, .area-housing h3 { margin-bottom: 12px; }
+  .area-insights p, .area-housing p { color: var(--color-text-secondary); line-height: 1.7; }
+  .area-section { margin-top: 64px; }
+  .area-section h2 { margin-bottom: 24px; }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+  }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+  }
+
+  .neighborhoods-list {
+    columns: 2;
+    column-gap: 32px;
+    list-style: disc;
+    padding-left: 20px;
+  }
+  .neighborhoods-list li { margin-bottom: 8px; }
+
+  .map-container { border-radius: 8px; overflow: hidden; }
+
+  .other-areas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .other-area-link {
+    display: inline-block;
+    padding: 8px 16px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    font-size: 0.9375rem;
+    color: var(--color-text);
+    transition: all var(--transition);
+  }
+  .other-area-link:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+    background: var(--color-accent-light);
+  }
+
+  .area-cta {
+    margin-top: 64px;
+    padding: 48px;
+    background: var(--color-bg);
+    border-radius: 12px;
+    text-align: center;
+  }
+  .area-cta h2 { margin-bottom: 12px; }
+  .area-cta p { color: var(--color-text-secondary); margin-bottom: 24px; max-width: 500px; margin-left: auto; margin-right: auto; }
+</style>

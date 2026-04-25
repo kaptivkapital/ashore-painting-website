@@ -1,0 +1,101 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import { loadQuery } from '../../sanity/lib/load-query';
+import { allServicesQuery } from '../../sanity/lib/queries';
+
+const services = await loadQuery<any[]>({ query: allServicesQuery });
+
+const breadcrumbs = [
+  { label: 'Home', url: '/' },
+  { label: 'Services', url: '/services' },
+];
+---
+
+<Layout title="Painting Services in St. Augustine, FL" description="Professional interior, exterior, cabinet, and commercial painting in St. Augustine, FL and surrounding areas. Call for a free estimate.">
+  <div class="container">
+    <Breadcrumbs items={breadcrumbs} />
+    <section class="section">
+      <h1>Painting Services in St. Augustine, FL</h1>
+      <p class="page-intro text-secondary">
+        From interior rooms to full exterior repaints, we deliver professional results to homeowners and businesses throughout Northeast Florida.
+      </p>
+      <div class="svc-grid">
+        {services?.map((service: any, i: number) => (
+          <a href={`/services/${service.slug}`} class="sc2">
+            <span class="sc2-num">{String(i + 1).padStart(2, '0')}</span>
+            <h3>{service.title}</h3>
+            {service.shortDescription && <p>{service.shortDescription}</p>}
+            <span class="sc2-link">Learn More &rarr;</span>
+          </a>
+        ))}
+      </div>
+    </section>
+  </div>
+</Layout>
+
+<style>
+  h1 { margin-bottom: 12px; }
+  .page-intro { font-size: 1.125rem; margin-bottom: 48px; max-width: 600px; }
+
+  .svc-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    justify-items: center;
+  }
+
+  .sc2 {
+    display: flex;
+    flex-direction: column;
+    padding: 32px 28px;
+    background: var(--color-bg);
+    border-radius: 6px;
+    text-decoration: none;
+    color: inherit;
+    transition: background 250ms ease, box-shadow 250ms ease;
+    width: 100%;
+  }
+  .sc2:hover {
+    background: var(--color-white);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  }
+  .sc2-num {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--color-primary);
+    opacity: 0.12;
+    line-height: 1;
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
+  }
+  .sc2 h3 {
+    font-size: 1.0625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin-bottom: 10px;
+    color: var(--color-primary);
+  }
+  .sc2 p {
+    font-size: 0.9375rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+    flex-grow: 1;
+  }
+  .sc2-link {
+    display: inline-block;
+    margin-top: 16px;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  @media (max-width: 900px) {
+    .svc-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 600px) {
+    .svc-grid { grid-template-columns: 1fr; }
+  }
+</style>

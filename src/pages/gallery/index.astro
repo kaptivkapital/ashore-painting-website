@@ -1,0 +1,45 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+import { loadQuery } from '../../sanity/lib/load-query';
+import { allProjectsQuery } from '../../sanity/lib/queries';
+
+const projects = await loadQuery<any[]>({ query: allProjectsQuery });
+
+const breadcrumbs = [
+  { label: 'Home', url: '/' },
+  { label: 'Gallery', url: '/gallery' },
+];
+---
+
+<Layout title="Painting Projects in St. Augustine, FL" description="Browse before and after photos of painting projects in St. Augustine, FL. Interior, exterior, and cabinet painting results.">
+  <div class="container">
+    <Breadcrumbs items={breadcrumbs} />
+    <section class="section">
+      <h1>Our Work</h1>
+      <p class="page-intro text-secondary">
+        Browse our portfolio of painting projects. Every project showcases our commitment to quality and attention to detail.
+      </p>
+      <div class="projects-grid">
+        {projects?.map((project: any) => (
+          <ProjectCard project={project} />
+        ))}
+      </div>
+      {(!projects || projects.length === 0) && (
+        <p class="empty-state">Projects coming soon. Check back after our first few jobs.</p>
+      )}
+    </section>
+  </div>
+</Layout>
+
+<style>
+  h1 { margin-bottom: 12px; }
+  .page-intro { font-size: 1.125rem; margin-bottom: 48px; max-width: 600px; }
+  .projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+  }
+  .empty-state { color: var(--color-text-light); font-style: italic; }
+</style>
